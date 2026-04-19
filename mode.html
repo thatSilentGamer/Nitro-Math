@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Mode - Nitro Math</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <div id="subtitle-text">SELECT MODE</div>
+
+    <div class="game-container">
+        <div class="game-card">
+
+            <h1 class="title">Who's Playing?</h1>
+
+            <p class="description-text" style="margin-bottom: 40px;">
+                Challenge yourself solo, or go head-to-head with a friend!
+            </p>
+
+            <div class="index-btn-group">
+                <button class="menu-btn btn-blue" onclick="window.location.href='selection.html?mode=1'">
+                    👤 1 PLAYER
+                </button>
+                <button class="menu-btn btn-blue" onclick="window.location.href='selection.html?mode=2'">
+                    👥 2 PLAYERS
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <button id="back-btn" onclick="window.location.href='index.html'">⬅ Back to Menu</button>
+
+</body>
+</html>

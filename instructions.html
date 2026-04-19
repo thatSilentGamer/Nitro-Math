@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Instructions - Nitro Math</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="instructions.css" />
+    </head>
+    <body>
+        <div class="game-container">
+            <div class="game-card">
+                <h1 class="title">Instructions</h1>
+
+                <img id="image" src="images/who-is-he.png" />
+
+                <p class="description-text" id = "instructions-text">
+                    lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                </p>
+
+                <div class="horizontal_container">
+                    <button class="nav_button" onclick="left_button_clicked()">
+                        ◄ PREV
+                    </button>
+
+                    <div class="dot-container">
+                        <span class="dot" id="dot1"></span>
+                        <span class="dot" id="dot2"></span>
+                        <span class="dot" id="dot3"></span>
+                        <span class="dot" id="dot4"></span>
+                        <span class="dot" id="dot5"></span>
+                    </div>
+
+                    <button class="nav_button" onclick="right_button_clicked()">
+                        NEXT ►
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <button id="back-btn" onclick="window.location.href='index.html'">⬅ Back to Menu</button>
+        
+        <script src="script.js"></script>
+    </body>
+</html>

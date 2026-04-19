@@ -1,0 +1,101 @@
+@import url('index.css'); 
+
+/* --- GAME SCREEN QUESTION BOX --- */
+.question-box { 
+    background: var(--bg-inner); 
+    border-radius: 20px; 
+    padding: 30px; 
+    margin-bottom: 25px; 
+    border: 1px solid #30363d; 
+    width: 100%; 
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#question-text { 
+    font-family: 'M PLUS Rounded 1c', sans-serif; 
+    font-size: 26px; 
+    font-weight: 800; 
+    margin: 0;
+    text-align: center;
+    transition: font-size 0.2s ease;
+}
+
+/* --- DYNAMIC QUESTION FONT SIZE --- */
+#question-text.text-sm { font-size: 14px; }
+#question-text.text-md { font-size: 18px; }
+#question-text.text-lg { font-size: 22px; }
+#question-text.text-xl { font-size: 26px; }
+
+/* --- THE GRID FIX --- */
+.answer-grid, .selection-grid { 
+    display: grid !important; 
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 15px !important; 
+    width: 100% !important;
+}
+
+.answer-grid .choice-btn, .selection-grid .level-btn {
+    margin-bottom: 0 !important;
+    min-height: 70px;
+}
+
+.btn-elite { 
+    grid-column: span 2 !important; 
+}
+
+/* --- THE LOADING SPINNER --- */
+.loader {
+    border: 4px solid rgba(255, 255, 255, 0.05);
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px auto;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- FEEDBACK TEXT --- */
+#feedback {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 20px;
+    min-height: 35px;
+    transition: opacity 0.9s ease;
+    text-shadow: 0 0 10px currentColor;
+    text-align: center;
+}
+
+/* --- SMOOTH GLOW SYSTEM --- */
+/* Override the ::after from index.css to always have the same transition speed
+   whether fading IN (class added) or fading OUT (class removed) */
+.game-container::after {
+    opacity: 0;
+    background-color: transparent;
+    filter: blur(30px);
+    transition: opacity 0.9s ease, background-color 0.9s ease !important;
+}
+
+/* Correct: green fades IN over rainbow */
+.game-container.glow-correct::after {
+    background-color: #10b981 !important;
+    opacity: 1 !important;
+}
+
+/* Wrong: red fades IN over rainbow */
+.game-container.glow-wrong::after {
+    background-color: #ef4444 !important;
+    opacity: 1 !important;
+}
