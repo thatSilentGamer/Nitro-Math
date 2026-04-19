@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nitro Math - Results</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;800&display=swap" rel="stylesheet" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background: #0f0f1a;
+                font-family: 'M PLUS Rounded 1c', sans-serif;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+
+            .bg-stars {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .star {
+                position: absolute;
+                border-radius: 50%;
+                background: #fff;
+                animation: twinkle var(--dur) ease-in-out infinite;
+                opacity: 0;
+            }
+
+            @keyframes twinkle {
+                0%, 100% { opacity: 0; transform: scale(0.5); }
+                50%       { opacity: var(--op); transform: scale(1); }
+            }
+
+            .confetti-piece {
+                position: fixed;
+                width: 10px;
+                height: 10px;
+                top: -20px;
+                border-radius: 2px;
+                animation: confettiFall var(--fall-dur) ease-in var(--delay) forwards;
+                z-index: 1;
+            }
+
+            @keyframes confettiFall {
+                0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+                100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+            }
+
+            .end-container {
+                position: relative;
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 28px;
+                animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            }
+
+            @keyframes popIn {
+                from { opacity: 0; transform: scale(0.7) translateY(40px); }
+                to   { opacity: 1; transform: scale(1) translateY(0); }
+            }
+
+            .trophy-icon {
+                font-size: 80px;
+                animation: bounce 2s ease-in-out infinite;
+                filter: drop-shadow(0 0 24px rgba(255, 215, 0, 0.5));
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0) rotate(-3deg); }
+                50%       { transform: translateY(-12px) rotate(3deg); }
+            }
+
+            .winner-text {
+                font-size: 52px;
+                font-weight: 800;
+                color: #fff;
+                text-align: center;
+                line-height: 1.15;
+                letter-spacing: -1px;
+                text-shadow: 0 0 40px rgba(99, 179, 237, 0.6);
+                animation: glowPulse 2.5s ease-in-out infinite;
+            }
+
+            @keyframes glowPulse {
+                0%, 100% { text-shadow: 0 0 30px rgba(99, 179, 237, 0.4); }
+                50%       { text-shadow: 0 0 60px rgba(99, 179, 237, 0.9), 0 0 100px rgba(159, 122, 234, 0.4); }
+            }
+
+            .winner-text span {
+                background: linear-gradient(135deg, #63b3ed, #b794f4, #fc8181);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .score-card {
+                background: rgba(255, 255, 255, 0.06);
+                border: 2px solid rgba(255, 255, 255, 0.12);
+                border-radius: 24px;
+                padding: 28px 48px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                backdrop-filter: blur(12px);
+                min-width: 320px;
+            }
+
+            .score-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 48px;
+            }
+
+            .score-row.winner-row .player-name {
+                color: #ffd700;
+            }
+
+            .score-row.winner-row .player-score {
+                color: #ffd700;
+            }
+
+            .player-name {
+                font-size: 20px;
+                font-weight: 500;
+                color: rgba(255, 255, 255, 0.75);
+            }
+
+            .player-score {
+                font-size: 22px;
+                font-weight: 800;
+                color: rgba(255, 255, 255, 0.9);
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 4px 18px;
+                letter-spacing: 0.5px;
+            }
+
+            .score-divider {
+                height: 1px;
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .btn-row {
+                display: flex;
+                gap: 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 8px;
+            }
+
+            .action-btn {
+                font-family: 'M PLUS Rounded 1c', sans-serif;
+                font-weight: 800;
+                font-size: 17px;
+                border: none;
+                border-radius: 16px;
+                padding: 14px 34px;
+                cursor: pointer;
+                transition: transform 0.15s ease, filter 0.15s ease;
+                letter-spacing: 0.5px;
+            }
+
+            .action-btn:hover {
+                transform: translateY(-3px) scale(1.04);
+                filter: brightness(1.15);
+            }
+
+            .action-btn:active {
+                transform: translateY(0) scale(0.97);
+            }
+
+            .btn-play-again {
+                background: #3b82f6;
+                color: #fff;
+                box-shadow: 0 6px 24px rgba(59, 130, 246, 0.45);
+            }
+
+            .btn-menu {
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.85);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+            }
+
+            #subtitle-text {
+                position: fixed;
+                top: 22px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: 'M PLUS Rounded 1c', sans-serif;
+                font-weight: 800;
+                font-size: 13px;
+                letter-spacing: 3px;
+                color: rgba(255, 255, 255, 0.3);
+                z-index: 20;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="subtitle-text">NITRO MATH</div>
+
+        <div class="bg-stars" id="stars"></div>
+
+        <div class="end-container">
+            <div class="trophy-icon">🏆</div>
+
+            <div class="winner-text"><span>Player 1 Wins!</span></div>
+
+            <div class="score-card">
+                <div class="score-row winner-row">
+                    <span class="player-name">⭐ Player 1</span>
+                    <span class="player-score">12 pts</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-row">
+                    <span class="player-name">Player 2</span>
+                    <span class="player-score">7 pts</span>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="action-btn btn-play-again" onclick="playAgain()">
+                    🔄 Play Again
+                </button>
+                <button class="action-btn btn-menu" onclick="window.location.href='mode.html'">
+                    ⬅ Menu
+                </button>
+            </div>
+        </div>
+
+        <script>
+            function playAgain() {
+                window.location.href = `selection.html?mode=${mode}`;
+            }
+        </script>
+        
+        <script>
+            const starsEl = document.getElementById("stars");
+            for (let i = 0; i < 80; i++) {
+                const s = document.createElement("div");
+                s.className = "star";
+                const size = Math.random() * 2.5 + 0.5;
+                s.style.cssText = `
+                    width:${size}px; height:${size}px;
+                    left:${Math.random()*100}%;
+                    top:${Math.random()*100}%;
+                    --dur:${(Math.random()*3+2).toFixed(1)}s;
+                    --op:${(Math.random()*0.6+0.2).toFixed(2)};
+                    animation-delay:${(Math.random()*4).toFixed(1)}s;
+                `;
+                starsEl.appendChild(s);
+            }
+
+            const colors = ["#63b3ed","#b794f4","#fc8181","#68d391","#f6e05e","#f687b3","#76e4f7"];
+            for (let i = 0; i < 70; i++) {
+                const c = document.createElement("div");
+                c.className = "confetti-piece";
+                c.style.cssText = `
+                    left:${Math.random()*100}%;
+                    background:${colors[Math.floor(Math.random()*colors.length)]};
+                    --fall-dur:${(Math.random()*2+2).toFixed(1)}s;
+                    --delay:${(Math.random()*1.5).toFixed(2)}s;
+                    border-radius:${Math.random()>0.5?'50%':'3px'};
+                    width:${Math.random()*8+6}px;
+                    height:${Math.random()*8+6}px;
+                `;
+                document.body.appendChild(c);
+            }
+        </script>
+
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const winner = urlParams.get('winner');
+            const p1 = urlParams.get('p1');
+            const p2 = urlParams.get('p2');
+            const grade = urlParams.get('grade');
+            const mode = urlParams.get('mode');
+
+            document.querySelector('.winner-text span').innerText =
+                winner === "1" ? "Player 1 Wins!" : "Player 2 Wins!";
+
+            const rows = document.querySelectorAll('.score-row');
+            rows[0].querySelector('.player-name').innerText =
+                winner === "1" ? "⭐ Player 1" : "Player 1";
+            rows[0].querySelector('.player-score').innerText = p1 + " pts";
+
+            rows[1].querySelector('.player-name').innerText =
+                winner === "2" ? "⭐ Player 2" : "Player 2";
+            rows[1].querySelector('.player-score').innerText = p2 + " pts";
+
+            rows[0].classList.toggle('winner-row', winner === "1");
+            rows[1].classList.toggle('winner-row', winner === "2");
+
+            document.getElementById('subtitle-text').innerText =
+                `NITRO MATH · GRADE ${grade}`;
+        </script>
+    </body>
+</html>
