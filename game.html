@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nitro Math - Game</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;800&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="selection.css" />
+    </head>
+    <body>
+        <div id="subtitle-text">GRADE LEVEL</div>
+
+        <div class="game-container" id="game-container">
+            <div class="game-card" id="main-card">
+                <div class="question-box">
+                    <div class="loader" id="spinner"></div>
+                    <div id="question-text"></div>
+                </div>
+
+                <div class="answer-grid">
+                    <button class="choice-btn btn-blue"   id="btn-0" onclick="checkAnswer(0)">-</button>
+                    <button class="choice-btn btn-green"  id="btn-1" onclick="checkAnswer(1)">-</button>
+                    <button class="choice-btn btn-purple" id="btn-2" onclick="checkAnswer(2)">-</button>
+                    <button class="choice-btn btn-red"    id="btn-3" onclick="checkAnswer(3)">-</button>
+                </div>
+                <div id="feedback"></div>
+            </div>
+        </div>
+
+        <br />
+        <button id="back-btn" onclick="window.location.href='selection.html'">
+            ⬅ Pick Another Grade
+        </button>
+
+        <script>
+            const GROQ_KEYS = [
+                "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",
+                "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",
+                "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",
+            ];
+            let keyIndex = 0;
+
+            function getNextKey() {
+                const key = GROQ_KEYS[keyIndex];
+                keyIndex = (keyIndex + 1) % GROQ_KEYS.length;
+                return key;
+            }
+
+            let questionBuffer = [];
+            let currentCorrectAnswer = null;
+            let isFetching = false;
+            let lastUsedTopic = "";
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentGrade = urlParams.get("grade") || "K";
+            const gradeDisplay =
+                currentGrade === "K" ? "KINDERGARTEN"
+                : currentGrade === "ALG1" ? "ALGEBRA 1"
+                : `GRADE ${currentGrade}`;
+            document.getElementById("subtitle-text").innerText = gradeDisplay;
+
+            const curriculum = {
+                K:    [
+                    "number bonds within 10", "counting objects", "addition within 10",
+                    "comparing numbers", "patterns and sequences", "basic shapes",
+                    "more and less", "ordinal numbers"
+                ],
+                1:    [
+                    "addition to 20", "place value tens", "subtraction from 20",
+                    "missing addends", "comparing two-digit numbers", "basic measurement",
+                    "telling time to the hour", "skip counting by 2s and 5s"
+                ],
+                2:    [
+                    "regrouping with 2-digit numbers", "fractions halves and quarters", "3D shapes",
+                    "addition and subtraction to 100", "place value hundreds", "measurement in cm and m",
+                    "telling time to 5 minutes", "even and odd numbers", "bar graphs"
+                ],
+                3:    [
+                    "multiplication 2-5", "perimeter", "division within 50",
+                    "multiplication 6-9", "fractions on a number line", "area of rectangles",
+                    "rounding to nearest 10", "elapsed time", "pictographs"
+                ],
+                4:    [
+                    "equivalent fractions", "decimal addition", "angles",
+                    "multi-digit multiplication", "long division", "adding and subtracting fractions",
+                    "lines of symmetry", "factors and multiples", "decimal place value"
+                ],
+                5:    [
+                    "volume of rectangular prisms", "ratios", "percentage of numbers",
+                    "multiplying fractions", "dividing fractions", "coordinate plane",
+                    "order of operations", "decimal multiplication", "data and line graphs"
+                ],
+                6:    [
+                    "ratios and rates", "algebraic expressions", "area of polygons",
+                    "unit rates", "percent problems", "integers and absolute value",
+                    "surface area", "mean median mode", "one-step equations"
+                ],
+                7:    [
+                    "proportional relationships", "rational numbers", "Pythagorean theorem",
+                    "percent change and markup", "two-step equations", "angle relationships",
+                    "probability", "scale drawings", "inequalities"
+                ],
+                ALG1: [
+                    "solving linear systems", "factoring trinomials", "quadratic functions",
+                    "slope and linear equations", "exponential growth and decay",
+                    "simplifying radical expressions", "function notation",
+                    "completing the square", "rational expressions"
+                ],
+            };
+
+            function getAIPrompt() {
+                const topics = curriculum[currentGrade] || curriculum["K"];
+                let selectedTopic = topics[Math.floor(Math.random() * topics.length)];
+                while (selectedTopic === lastUsedTopic && topics.length > 1) {
+                    selectedTopic = topics[Math.floor(Math.random() * topics.length)];
+                }
+                lastUsedTopic = selectedTopic;
+
+                const seedNum1 = Math.floor(Math.random() * 12) + 3;
+                const seedNum2 = Math.floor(Math.random() * 20) + 4;
+                const isWordProblem = Math.random() > 0.15;
+
+                const jsonFormat = `RULES:
+1. Create the question.
+2. Solve it step-by-step internally to ensure accuracy.
+3. Generate 3 plausible incorrect answers.
+4. Output strictly in this JSON format:
+{
+  "question": "...",
+  "step_by_step_logic": "...",
+  "choices": ["...", "...", "...", "..."],
+  "correct": "..."
+}`;
+
+                if (isWordProblem) {
+                    return `Task: Create ONE MEDIUM-DIFFICULTY pure math problem (NO story, NO names, NO context) for grade ${currentGrade}. Make the problem something you would expect to find in a worksheet for kids in ${currentGrade}.
+
+Topic: ${selectedTopic}.
+
+ANTI-REPETITION RULE:
+You MUST uniquely build the math problem using the numbers ${seedNum1} and ${seedNum2}.
+
+${jsonFormat}`;
+                } else {
+                    const randomName = [
+                        "Alex", "Sam", "Jordan", "Taylor", "Arjun", "Morgan", "Casey", "James",
+                        "Ryan", "Priya", "Chris", "Jamie", "Drew", "Cameron", "Rohan", "Blake",
+                        "Avery", "Logan", "Parker", "Ananya", "Reese", "Quinn", "Hayden", "Rowan",
+                        "Karan", "Skyler", "Emerson", "Finley", "Dakota", "Isha", "Elliot", "Riley",
+                        "Charlie", "Sawyer", "Vikram", "Hunter", "Payton", "Sage", "Kai", "Neha",
+                        "Jesse", "Micah", "Toby", "Shawn", "Amit", "Noah", "Liam", "Ethan", "Mason",
+                        "Diya", "Lucas", "Henry", "Owen", "Leo", "Rahul", "Jack", "Theo", "Ezra",
+                        "Miles", "Sneha", "Caleb", "Asher", "Julian", "Nathan", "Dev", "Isaac",
+                        "Aaron", "Eli", "Adrian", "Meera", "Nolan", "Connor", "Brayden", "Carson",
+                        "Kabir", "Xavier", "Dominic", "Austin", "Jason", "Pooja", "Zachary", "Adam",
+                        "Kevin", "Justin", "Aryan", "Brandon", "Tyler", "Cole", "Chase", "Sanjay",
+                        "Ian", "Max", "Victor", "Oscar", "Anil", "Simon", "Louis", "Hugo", "Felix", "Riya"
+                    ][Math.floor(Math.random() * 100)];
+
+                    return `Task: Create ONE MEDIUM-DIFFICULTY Singapore Math word problem for grade ${currentGrade}. Make the problem something you would expect to find in a worksheet for kids in ${currentGrade}.
+
+Topic: ${selectedTopic}.
+
+ANTI-REPETITION RULE:
+You MUST uniquely build the math problem using the numbers ${seedNum1} and ${seedNum2}. Make the scenario involve a person named ${randomName}.
+
+${jsonFormat}`;
+                }
+            }
+
+            async function fetchQuestionFromAPI() {
+                try {
+                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${getNextKey()}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model: "llama-3.3-70b-versatile",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: "You are an elite math educator. You NEVER make arithmetic errors. You NEVER make grammar errors. Before writing any answer, you must verify your math is correct. Respond ONLY with a valid JSON object. No intro text, no markdown backticks, no <think> tags."
+                                },
+                                {
+                                    role: "user",
+                                    content: getAIPrompt()
+                                }
+                            ],
+                            temperature: 0.5,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        console.error("Groq error:", err);
+                        return null;
+                    }
+
+                    const data = await response.json();
+                    let rawContent = data.choices[0].message.content;
+
+                    const start = rawContent.indexOf('{');
+                    const end = rawContent.lastIndexOf('}') + 1;
+                    const parsed = JSON.parse(rawContent.substring(start, end));
+
+                    if (parsed.choices.some(c => String(c).length > 100)) {
+                        console.warn("Bad response - choice too long, retrying...");
+                        return null;
+                    }
+
+                    if (!parsed.question || !parsed.choices || parsed.choices.length !== 4 || !parsed.correct) {
+                        console.warn("Bad response - missing fields, retrying...");
+                        return null;
+                    }
+
+                    return parsed;
+
+                } catch (e) {
+                    console.error("Crashed during fetch:", e);
+                    return null;
+                }
+            }
+
+            async function fillBuffer() {
+                if (isFetching || questionBuffer.length >= 3) return;
+
+                isFetching = true;
+                const q = await fetchQuestionFromAPI();
+
+                if (q) {
+                    questionBuffer.push(q);
+                    isFetching = false;
+                    setTimeout(fillBuffer, 500);
+                } else {
+                    console.warn("API limit hit or failed. Cooling down...");
+                    isFetching = false;
+                    setTimeout(fillBuffer, 8000);
+                }
+            }
+
+            function showNextQuestion() {
+                const qText = document.getElementById("question-text");
+                const btns = document.querySelectorAll(".choice-btn");
+                const spinner = document.getElementById("spinner");
+
+                if (questionBuffer.length === 0) {
+                    spinner.style.display = "block";
+                    qText.innerText = "";
+                    if (!isFetching) fillBuffer();
+                    setTimeout(showNextQuestion, 1500);
+                    return;
+                }
+
+                spinner.style.display = "none";
+                const q = questionBuffer.shift();
+
+                let strChoices = q.choices.map((c) => String(c).trim());
+                let strCorrect = String(q.correct).trim();
+
+                if (!strChoices.includes(strCorrect)) {
+                    const randomSlot = Math.floor(Math.random() * 4);
+                    strChoices[randomSlot] = strCorrect;
+                }
+
+                currentCorrectAnswer = strCorrect;
+
+                qText.classList.remove("fade-up");
+                qText.classList.add("fade-out");
+                btns.forEach((btn) => btn.classList.add("btn-text-hide"));
+
+                setTimeout(() => {
+                    qText.innerText = q.question;
+
+                    qText.classList.remove("text-sm", "text-md", "text-lg", "text-xl");
+                    if (q.question.length > 300) {
+                        qText.classList.add("text-sm");
+                    } else if (q.question.length > 200) {
+                        qText.classList.add("text-md");
+                    } else if (q.question.length > 100) {
+                        qText.classList.add("text-lg");
+                    } else {
+                        qText.classList.add("text-xl");
+                    }
+
+                    qText.classList.remove("fade-out");
+                    void qText.offsetWidth;
+                    qText.classList.add("fade-up");
+
+                    for (let i = 0; i < 4; i++) {
+                        btns[i].innerText = strChoices[i];
+                        btns[i].classList.remove("btn-text-hide");
+                        btns[i].disabled = false;
+                    }
+                    document.getElementById("feedback").style.opacity = "0";
+
+                    fillBuffer();
+                }, 400);
+            }
+
+            function checkAnswer(idx) {
+                let val = document.getElementById(`btn-${idx}`).textContent.trim().toLowerCase();
+                let correct = currentCorrectAnswer.toLowerCase();
+
+                const fb = document.getElementById("feedback");
+                const container = document.getElementById("game-container");
+
+                document.querySelectorAll(".choice-btn").forEach((b) => (b.disabled = true));
+
+                if (val === correct) {
+                    container.classList.remove("glow-wrong");
+                    container.classList.add("glow-correct");
+                    fb.innerText = "Correct!";
+                    fb.style.color = "#10b981";
+                    fb.style.opacity = "1";
+                    // Short hold then fade out — total feel is a quick flash
+                    setTimeout(() => {
+                        fb.style.opacity = "0";
+                        container.classList.remove("glow-correct");
+                        setTimeout(showNextQuestion, 500);
+                    }, 600);
+                } else {
+                    container.classList.remove("glow-correct");
+                    container.classList.add("glow-wrong");
+                    fb.innerText = "Try again!";
+                    fb.style.color = "#ef4444";
+                    fb.style.opacity = "1";
+                    setTimeout(() => {
+                        container.classList.remove("glow-wrong");
+                        fb.style.opacity = "0";
+                        setTimeout(() => {
+                            document.querySelectorAll(".choice-btn").forEach((b) => (b.disabled = false));
+                        }, 400);
+                    }, 600);
+                }
+            }
+
+            window.onload = () => {
+                showNextQuestion();
+            };
+        </script>
+    </body>
+</html>
